@@ -5,12 +5,10 @@ JamSketch is a jam session system that enables the user to enjoy improvisation j
 ## Installation
 
 Unzip jamsketch_lite.zip anywhere.
-Note that the path to the extended executable file must not contain any space.
-If the path contains space, the program will not launch.
 
 ## Usage
 
-Execute jamsketch_lite.exe on Windows.
+Execute jamsketch_lite.exe on Windows.  
 Execute jamsketch_lite.jar on all platforms.
 
 ## Requirements
@@ -25,7 +23,7 @@ See for details of the system:
 
 ## Authors
 
-* Tetsuro Kitahara (Nihon University, Japan)
-kitahara@kthrlab.jp
-http://www.kthrlab.jp/
+* Tetsuro Kitahara (Nihon University, Japan)  
+kitahara@kthrlab.jp  
+http://www.kthrlab.jp/  
 
