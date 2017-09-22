@@ -5,11 +5,10 @@ JamSketchは、伴奏の演奏に合わせて、画面上にメロディのお�
 ## Installation
 
 jamsketch_lite.zipを任意の場所に展開します。
-展開されたフォルダのパスに空白が入っていると実行できませんのでご注意ください。
 
 ## Usage
 
-Windowsではjamsketch_lite.exeを実行します。
+Windowsではjamsketch_lite.exeを実行します。  
 Windows以外のOSではjamsketch_lite.jarを実行します。
 
 ## Requirements
@@ -24,6 +23,6 @@ Windows以外のOSではjamsketch_lite.jarを実行します。
 * Tetsuro Kitahara, Sergio Giraldo and Rafael Ramírez: "JamSketch: Improvisation Support System with GA-based Melody Creation from User's Drawing", Proceedings of the 13th International Simposium on Computer Music Multidisiplinary Research (CMMR 2017), Sept. 2017. 
 
 ## Authors
-* 北原鉄朗（日本大学文理学部情報科学科）
-  kitahara@kthrlab.jp
-  http://www.kthrlab.jp/
+* 北原鉄朗（日本大学文理学部情報科学科）  
+  kitahara@kthrlab.jp  
+  http://www.kthrlab.jp/  
