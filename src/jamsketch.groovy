@@ -64,7 +64,8 @@ if (EYE_TRACKER) {
 }
 
   void initData() {
-    data = new MelodyData(CFG.MIDFILENAME, width, this, this)
+	def filename = ClassLoader.getSystemResource(CFG.MIDFILENAME).toURI().getPath()
+	data = new MelodyData(filename , width, this, this)
     println(data.getFullChordProgression())
     smfread(data.scc.getMIDISequence())
     def part = data.scc.getFirstPartWithChannel(1)
@@ -363,5 +364,6 @@ if (EYE_TRACKER) {
 //    peyeY = mouseY
   }
 }
-JamSketch.CFG = evaluate(new File("./config.txt"))
+def uri = ClassLoader.getSystemResource("config.txt").toURI()
+JamSketch.CFG = evaluate(new File(uri))
 JamSketch.start("JamSketch")

@@ -11,7 +11,8 @@ class PerformanceRenderer {
 
   def start() {
     CFG.MODEL_FILENAMES.each {k, v ->
-      def stream = new ObjectInputStream(new FileInputStream(v))
+      def filename = ClassLoader.getSystemResource(v).toURI().getPath()
+      def stream = new ObjectInputStream(new FileInputStream(filename))
       model[k] = stream.readObject()
       stream.close()
     }
@@ -67,10 +68,10 @@ class PerformanceRenderer {
   @CompileStatic
   double limit(double value, List<Double> bounds) {
     if (value > bounds[1]) {
-      value = bounds[1]
+      value = bounds[1].doubleValue()
     }
     if (value < bounds[0]) {
-      value = bounds[0]
+      value = bounds[0].doubleValue()
     }
     value
   }

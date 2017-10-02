@@ -32,7 +32,8 @@ class MelodyModel {
     mr.addMusicLayerCont("curve")
     mr.addMusicLayer("melody", (0..11) as int[])
     def json = new JsonSlurper()
-    def model = json.parseText((new File(CFG.MODEL_FILE)).text)
+	def uri = ClassLoader.getSystemResource(CFG.MODEL_FILE).toURI()
+    def model = json.parseText((new File(uri)).text)
     bigram = model.bigram
     delta_bigram = model.delta_bigram
     chord_beat_dur_unigram = model.chord_beat_dur_unigram
@@ -160,7 +161,7 @@ class MelodyModel {
       double lik = 0.0
       int length = s.size() - 1;
       for (int i = 0; i < length; i++) {
-	lik += Math.log(bigram[s[i]][s[i+1]])
+	lik += Math.log(bigram[s[i].intValue()][s[i+1].intValue()])
       }
       lik
     }
@@ -197,7 +198,7 @@ class MelodyModel {
       int[] freq = [0] * maxvalue
       int sum = 0
       for (int i = 0; i < s.size(); i++) {
-	freq[s[i]] += 1
+	freq[s[i].intValue()] += 1
         sum++
 	  }
       double entropy = 0.0
