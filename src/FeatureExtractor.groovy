@@ -51,7 +51,7 @@ class FeatureExtractor {
     def osname = System.getProperty("os.name").substring(0, 3).toLowerCase()
     if (CFG.OCTAVE_PROGRAM[osname] != null)
       octavefactory.setOctaveProgram(new File(CFG.OCTAVE_PROGRAM[osname]))
-	def uri = ClassLoader.getSystemResource("MIDItoolbox").toURI()
+	def uri = getClass().getClassLoader().getResource("MIDItoolbox").toURI()
 	octavefactory.setWorkingDir(new File(uri))
     this.part = part
     this.chordprog = chordprog

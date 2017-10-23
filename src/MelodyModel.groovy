@@ -32,7 +32,7 @@ class MelodyModel {
     mr.addMusicLayerCont("curve")
     mr.addMusicLayer("melody", (0..11) as int[])
     def json = new JsonSlurper()
-	def uri = ClassLoader.getSystemResource(CFG.MODEL_FILE).toURI()
+	def uri = getClass().getClassLoader().getResource(CFG.MODEL_FILE).toURI()
     def model = json.parseText((new File(uri)).text)
     bigram = model.bigram
     delta_bigram = model.delta_bigram

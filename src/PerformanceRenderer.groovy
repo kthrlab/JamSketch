@@ -11,7 +11,7 @@ class PerformanceRenderer {
 
   def start() {
     CFG.MODEL_FILENAMES.each {k, v ->
-      def filename = ClassLoader.getSystemResource(v).toURI().getPath()
+      def filename = getClass().getClassLoader().getResource(v).toURI().getPath()
       def stream = new ObjectInputStream(new FileInputStream(filename))
       model[k] = stream.readObject()
       stream.close()
