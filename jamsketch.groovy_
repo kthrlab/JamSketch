@@ -1,0 +1,270 @@
+import groovy.transform.*
+import jp.crestmuse.cmx.filewrappers.*
+import jp.crestmuse.cmx.processing.*
+import jp.crestmuse.cmx.processing.gui.*
+import groovy.json.*
+import jp.crestmuse.cmx.misc.*
+import groovy.json.*
+import controlP5.*
+import javax.swing.*
+import javax.swing.filechooser.*
+import static Config.*
+
+class JamSketch extends SimplePianoRoll implements TargetMover {
+
+
+  MelodyData data
+  String username = ""
+
+  void setup() {
+    super.setup()
+    size(1200, 700)
+    showMidiOutChooser()
+    def p5ctrl = new ControlP5(this)
+    p5ctrl.addButton("startMusic").
+    setLabel("Start / Stop").setPosition(20, 645).setSize(120, 40)
+    p5ctrl.addButton("resetMusic").
+    setLabel("Reset").setPosition(160, 645).setSize(120, 40)
+    p5ctrl.addButton("loadCurve").
+    setLabel("Load").setPosition(300, 645).setSize(120, 40)
+    p5ctrl.addButton("inputName").
+    setLabel("Input your name").setPosition(440, 645).setSize(120, 40)
+    initData()
+    if (EYE_TRACKER) {
+      def eyetracker = new EyeTrackerFrame()
+      eyetracker.showCameraChooser()
+      eyetracker.start(this)
+    }
+    inputName()
+  }
+
+  void initData() {
+    data = new MelodyData("blues01.mid", width, this, this)
+    println(data.getFullChordProgression())
+    smfread(data.scc.getMIDISequence())
+    def part = data.scc.getFirstPartWithChannel(1)
+    setDataModel(
+      part.getPianoRollDataModel(
+	INITIAL_BLANK_MEASURES, INITIAL_BLANK_MEASURES + NUM_OF_MEASURES
+      ))
+  }
+  
+  void draw() {
+    super.draw()
+    stroke(0, 0, 255)
+    strokeWeight(3)
+    (0..<(data.curve1.size()-1)).each { i ->
+      if (data.curve1[i] != null && data.curve1[i+1] != null)
+	line(i, data.curve1[i] as int, i+1, data.curve1[i+1] as int)
+    }
+    if (getCurrentMeasure() == NUM_OF_MEASURES - 1) {
+      makeLog("melody")
+      if (MELODY_RESETING) {
+	getDataModel().shiftMeasure(NUM_OF_MEASURES)
+	data.resetCurve()
+      }
+    }
+    if (isNowPlaying()) {
+      def data = getDataModel()
+      int m = getCurrentMeasure() + data.getFirstMeasure() -
+              INITIAL_BLANK_MEASURES + 1
+      int mtotal = data.getMeasureNum() * REPEAT_TIMES
+      textSize(32)
+      fill(0, 0, 0)
+      text(m + " / " + mtotal, 620, 675)
+    }
+    if (FORCED_PROGRESS) {
+      mouseX = beat2x(getCurrentMeasure()+1, getCurrentBeat())
+    }
+    if (!ON_DRAG_ONLY && isInside(mouseX, mouseY)) {
+      int m1 = x2measure(mouseX)
+      int m0 = x2measure(pmouseX)
+      if (0 <= m0) {  
+        if (pmouseX < mouseX) {
+       	  (pmouseX..mouseX).each { i ->
+            data.curve1[i] = mouseY
+	  }
+	}
+//	else if (pmouseX > mouseX) {
+//	  (pmouseX..mouseX).each { i ->
+//	    data.curve1[i] = null
+//	  }
+//	}
+        if (m1 > m0) {
+          data.updateCurve(m0 % NUM_OF_MEASURES)
+	}
+      }
+    }
+    if (CURSOR_ENHANCED) {
+      fill(255, 0, 0)
+      ellipse(mouseX, mouseY, 10, 10)
+    }
+  }
+
+  void stop() {
+    super.stop()
+    featext.stop()
+  }
+
+  void startMusic() {
+    if (isNowPlaying()) {
+      stopMusic()
+      makeLog("stop")
+    } else {
+      //      setTickPosition(0)
+      //      getDataModel().setFirstMeasure(INITIAL_BLANK_MEASURES)
+      playMusic()
+      makeLog("play")
+    }
+  }
+
+  void resetMusic() {
+    if (isNowPlaying()) {
+      stopMusic()
+      makeLog("stop")
+    }
+    initData()
+    setTickPosition(0)
+    getDataModel().setFirstMeasure(INITIAL_BLANK_MEASURES)
+    makeLog("reset")
+  }
+
+  void makeLog(action) {
+    def logname = "output_" + (new Date()).toString().replace(" ", "_").replace(":", "-") + "_" + username
+    if (action == "melody") {
+      def midname = "${LOG_DIR}/${logname}_melody.mid"
+      data.scc.toWrapper().toMIDIXML().writefileAsSMF(midname)
+      println("saved as ${midname}")
+      def sccname = "${LOG_DIR}/${logname}_melody.sccxml"
+      data.scc.toWrapper().writefile(sccname)
+      println("saved as ${sccname}")
+      def jsonname = "${LOG_DIR}/${logname}_curve.json"
+      saveStrings(jsonname, [JsonOutput.toJson(data.curve1)] as String[])
+      println("saved as ${jsonname}")
+      def pngname = "${LOG_DIR}/${logname}_screenshot.png"
+      save(pngname)
+      println("saved as ${pngname}")
+    } else if (action == "name") {
+      def txtname = "${LOG_DIR}/${logname}_name.txt"
+      saveStrings(txtname, [username] as String[])
+    } else {
+      def txtname = "${LOG_DIR}/${logname}_${action}.txt"
+      saveStrings(txtname, [action] as String[])
+      println("saved as ${txtname}")
+    }
+  }
+    
+  void mouseDragged() {
+    if (FORCED_PROGRESS) {
+      mouseX = beat2x(getCurrentMeasure()+1, getCurrentBeat())
+    }
+    if (inside(mouseX, mouseY)) {
+      if (mouseButton == RIGHT || (keyPressed && keyCode == SHIFT)) {
+	(pmouseX..mouseX).each { i ->
+	  data.curve1[i] = null
+	}
+      } else if (mouseButton == LEFT) {
+	(pmouseX..mouseX).each { i ->
+	  data.curve1[i] = mouseY
+	}
+      }
+      if (x2measure(pmouseX) < x2measure(mouseX)) {
+	data.updateCurve(x2measure(pmouseX) % NUM_OF_MEASURES)
+      }
+    }
+  }
+
+  void loadCurve() {
+    def filter = new FileNameExtensionFilter(".json or .txt", "json", "txt")
+    def chooser = new JFileChooser(currentDirectory: new File("."),
+				   fileFilter: filter)
+    if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+      if (chooser.selectedFile.name.endsWith(".json")) {
+	def json = new JsonSlurper()
+	data.curve1 = json.parseText(chooser.selectedFile.text)
+      } else if (chooser.selectedFile.name.endsWith(".txt")) {
+	println("Reading ${chooser.selectedFile.absolutePath}")
+	def table = loadTable(chooser.selectedFile.absolutePath, "csv")
+	data.curve1 = [null] * width
+	int n = table.getRowCount()
+	int m = data.curve1.size() - 100
+	for (int i in 100..<(data.curve1.size()-1)) {
+	  int from = (i-100) * n / m
+	  int thru = ((i+1)-100) * n / m - 1
+	  data.curve1[i] =
+	    (from..thru).collect{notenum2y(table.getFloat(it, 0))}.sum() /
+	    (from..thru).size()
+	}
+      }
+    } else {
+      println("File is not supported")
+      return
+    }
+    data.updateCurve('all')
+  }
+
+  void inputName() {
+    username = JOptionPane.showInputDialog(this, "Input your name") ?: username
+    println("Set USERNAME to ${username}")
+    makeLog("name")
+  }
+  
+  void mouseReleased() {
+    if (isInside(mouseX, mouseY))
+      data.updateCurve(x2measure(mouseX) % NUM_OF_MEASURES)
+  }
+
+  void keyReleased() {
+    if (key == ' ') {
+      if (isNowPlaying()) {
+	stopMusic()
+      } else {
+	setTickPosition(0)
+	getDataModel().setFirstMeasure(INITIAL_BLANK_MEASURES)
+	playMusic()
+      }
+      //    } else if (key == 'l') {
+      //      def json = new JsonSlurper()
+      //      data.curve1 = json.parseText((new File("curve.json")).text)
+      //      data.updateCurve()
+      //      (0..<NUM_OF_MEASURES).each {
+      //	model.updateMusicRepresentation(it)
+      //      }
+      //    } else if (key == 's') {
+      //      def filename =
+      //	"output_${(new Date()).toString().replace(" ", "_")}.mid"
+      //	data.scc.toWrapper().toMIDIXML().writefileAsSMF(filename)
+      //	println("saved as ${filename}.")
+      //	data.scc.toWrapper().writefile("output.xml")
+    } else if (key == 'b') {
+      setNoteVisible(!isNoteVisible());
+      println("Visible=${isVisible()}")
+    } else if (key == 'u') {
+      data.updateCurve('all')
+    }
+  }
+
+  double peyeX = 0, peyeY = 0
+  double meyeX = 0.5, meyeY = 0.5
+  int eyeCount = 1
+
+  void setTarget(double x, double y) {
+    println("(${x}, ${y})")
+      meyeX = (meyeX * eyeCount + x) / (eyeCount + 1)
+      meyeY = (meyeY * eyeCount + y) / (eyeCount + 1)
+    eyeCount++
+    mouseX -= EYE_MOTION_SPEED * (x - meyeX)
+    mouseY += EYE_MOTION_SPEED * (y - meyeY)
+//    mouseX -= 0.5 * (x - peyeX) * width
+//    mouseY += 0.5 * (y - peyeY) * height
+    peyeX = x
+    peyeY = y
+    if (mouseX < 0) mouseX = 0
+    if (mouseX > width) mouseX = width
+    if (mouseY < 0) mouseY = 0
+    if (mouseY > height) mouseY = height
+  }
+}
+JamSketch.start("JamSketch")
+
+  

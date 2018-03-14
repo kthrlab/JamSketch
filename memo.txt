@@ -1,0 +1,9 @@
+timidity -iA -B2,8 -Os -EFreverb=0
+sudo modprobe snd-virmidi
+amidi -l で確認
+aplaymidi -l で番号確認
+aconnect 20:0 128.0
+
+参考
+https://jannewmarch.gitbooks.io/programming-and-using-linux-sound-systems/content/MIDI/JavaSound/UsingTiMidityinsteadofthedefaultGervillsynthesizer.html
+http://tldp.org/HOWTO/MIDI-HOWTO-10.html
